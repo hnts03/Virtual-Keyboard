@@ -16,11 +16,11 @@ class Keyboard():
         self.s = int(self.img.shape[0] * 0.0764)
         self.x = int(self.img.shape[1] * 0.172)
         self.y = self.img.shape[0] - int(self.img.shape[0] * 0.118) - (self.s * 5)
-        self.key_list = ['`','1','2','3','4','5','6','7','8','9','0','-','=','BACK','\n',
-                    'TAP', 'Q','W','E','R','T','Y','U','I','O','P','[',']','\\','\n',
-                    'CAPS','A','S','D','F','G','H','J','K','L',';','\'','ENTER', '\n',
-                    'SHIFT','Z','X','C','V','B','N','M',',','.','/','SHIFT', '\n',
-                    'FN','CTR','OPT','ALT','SPACE','Lng','OPT','<', '^','v','>'
+        self.key_list = ['`','1','2','3','4','5','6','7','8','9','0','-','=','backspace','\n',
+                    'tab', 'Q','W','E','R','T','Y','U','I','O','P','[',']','\\','\n',
+                    'caps_lock','A','S','D','F','G','H','J','K','L',';','\'','enter', '\n',
+                    'shift','Z','X','C','V','B','N','M',',','.','/','shift', '\n',
+                    'FN','ctrl','OPT','alt','space','Lng','OPT','left', 'up','down','right'
                     ]
         
     def get_image(self, img): # 이미지 업데이트 함수
@@ -38,40 +38,39 @@ class Keyboard():
         is_key_exist = False
         x = self.x
         y = self.y
-        print(x, y)
 
         for key in self.key_list:
             scaler, diag_scaler = 1.0, 1.0
             if key != in_key:
-                if key in ('\n','BACK','TAP','CAPS','ENTER','SHIFT','SPACE'):
+                if key in ('\n','backspace','tab','caps_lock','enter','shift','space'): # if key in ('\n','BACK','TAP','CAPS','ENTER','SHIFT','SPACE'):
                     if key == '\n':
                         y += self.s + 2
                         x = self.x
-                    elif key == 'BACK' or key == 'TAP':
+                    elif key == 'backspace' or key == 'tab':
                         scaler = 1.5
-                    elif key == 'CAPS':
+                    elif key == 'caps_lock':
                         scaler = 1.75
-                    elif key == 'ENTER':
+                    elif key == 'enter':
                         scaler = 1.8
-                    elif key == 'SHIFT':
+                    elif key == 'shift':
                         scaler = 2.31
-                    elif key == 'SPACE':
+                    elif key == 'space':
                         scaler = 4.7
                 
                 x += int(scaler * self.s) + 2
 
             else:
                 is_key_exist = True
-                if key in ('BACK','TAP','CAPS','ENTER','SHIFT','SPACE'):
-                    if key == 'BACK' or key == 'TAP':
+                if key in ('backspace','tab','caps_lock','enter','shift','space'):
+                    if key == 'backspace' or key == 'tab':
                         diag_scaler = 1.5
-                    elif key == 'CAPS':
+                    elif key == 'caps_lock':
                         diag_scaler = 1.75
-                    elif key == 'ENTER':
+                    elif key == 'enter':
                         diag_scaler = 1.8
-                    elif key == 'SHIFT':
+                    elif key == 'shift':
                         diag_scaler = 2.31
-                    elif key == 'SPACE':
+                    elif key == 'space':
                         diag_scaler = 4.7
                 return is_key_exist, [[x, y], [x + int(diag_scaler * self.s), y + self.s]]
 
@@ -96,24 +95,24 @@ class Keyboard():
             bias_scaler = 1.0
             text_position_scaler = (0.5, 0.1)
 
-            if key in ('\n','BACK','TAP','CAPS','ENTER','SHIFT','SPACE'):  #특수키 크기 조절
+            if key in ('\n','backspace','tab','caps_lock','enter','shift','space'):  #특수키 크기 조절
                 if key == '\n':  #\n이면 줄바꿈
                     self.y += self.s+2
                     self.x = int(self.img.shape[1] * 0.172)
                 
-                elif key == 'BACK' or key == 'TAP': #back, tap키, bias_scaler=1.5, text_position_scaler=(0.5, 0.1)
+                elif key == 'backspace' or key == 'tab': #back, tap키, bias_scaler=1.5, text_position_scaler=(0.5, 0.1)
                     bias_scaler=1.5
 
-                elif key == 'CAPS': #caps키, bias_scaler=1.75, text_position_scaler=(0.5, 0.1)
+                elif key == 'caps_lock': #caps키, bias_scaler=1.75, text_position_scaler=(0.5, 0.1)
                     bias_scaler=1.75
 
-                elif key == 'ENTER': #enter키, bias_scaler=1.8, text_position_scaler=(0.5, 0.1)
+                elif key == 'enter': #enter키, bias_scaler=1.8, text_position_scaler=(0.5, 0.1)
                     bias_scaler=1.8
 
-                elif key == 'SHIFT': #shift키, bias_scaler=2.31, text_position_scaler=(0.5, 0.1)
+                elif key == 'shift': #shift키, bias_scaler=2.31, text_position_scaler=(0.5, 0.1)
                     bias_scaler=2.31
 
-                elif key == 'SPACE': #SPACE키, bias_scaler=4.7, text_position_scaler=(0.5, 1.9)
+                elif key == 'space': #SPACE키, bias_scaler=4.7, text_position_scaler=(0.5, 1.9)
                     bias_scaler=4.7
                     text_position_scaler=(0.5, 1.9)
 
@@ -129,14 +128,25 @@ class Keyboard():
         self.x = int(self.img.shape[1] * 0.172)
         self.y = self.img.shape[0] - int(self.img.shape[0] * 0.118) - (self.s * 5)
 
+        return self.img
+
+    def get_all_keyposition(self):
+        points = dict()
+        for key in self.key_list:
+            if key != '\n':
+                _, ret = self.get_keyposition(key)
+                points[key] = ret
+
+        return points
 
 def main():
     kb = Keyboard()             # 키보드 클래스 가져오기
     kb.drawing_keyboard()       # 키보드 클래스의 drawing_keyboard 함수 사용
-    print(f"BACK : {kb.get_keyposition('BACK')}")
-    print(f"1 : {kb.get_keyposition('1')}")
-    print(f"M : {kb.get_keyposition('M')}")
-    print(f"BAC : {kb.get_keyposition('BAC')}")
+    # print(f"BACK : {kb.get_keyposition('BACK')}")
+    # print(f"1 : {kb.get_keyposition('1')}")
+    # print(f"M : {kb.get_keyposition('M')}")
+    # print(f"BAC : {kb.get_keyposition('BAC')}")
+    # print(kb.get_all_keyposition())
 
     cv2.imshow("1234", kb.img)  # 클래스 내부 이미지 변수를 이용하여 이미지 출력
     cv2.waitKey()               # 키 입력들어올때까지 대기
