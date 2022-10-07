@@ -5,6 +5,7 @@
 # 2. 복합 키 (ex. ctrl + a) 구현 방식 찾기
 # 3. 시간에 따른 키 입력방법 구현 (완료)
 # 4. 키보드 입력의 모듈화 진행하기
+# 5. 키보드 바깥으로 포인터가 넘어가도 키입력되던 것 수정(완료)
 
 
 from pynput.keyboard import Key, Controller
@@ -49,6 +50,7 @@ size_x, size_y = 1280, 720
 
 isFlipped = True
 all_key_points = kb_layout.get_all_keyposition()
+is_in_boundary = False
 
 # print(points)
 if cap.isOpened():
@@ -71,8 +73,9 @@ if cap.isOpened():
                 if (points[0][0] < lmList[8][1]) and (lmList[8][1] < points[1][0]) :
                     if (points[0][1] < lmList[8][2]) and (lmList[8][2] < points[1][1]) :
                         try :
-                            # print(key)
                             c_key = key
+                            is_in_boundary = True
+                            break
                             # controller.press(key)
                             # controller.release(key)
                             
@@ -81,19 +84,24 @@ if cap.isOpened():
                             # controller.press(key_dict[key])
                             # controller.release(key_dict[key])
 
+                else:
+                    # print(f'c_key = {c_key}, key = {key}, is_in_boundary = {is_in_boundary}, points = {points}, lmList = {lmList[8][1:]}')
+                    is_in_boundary = False
+
             # --- To measure how long the c_key keeps ---
             if c_key != p_key:
                 p_key = c_key
                 base_time = 0
                 delta_time = 0
-            else:
+
+            elif is_in_boundary:
                 temp = time.time_ns()
                 if delta_time == 0:
                     delta_time = temp
                 else :
                     base_time += temp - delta_time
 
-                print(base_time)
+                # print(base_time)
 
                 if base_time > Wait_time:
                     try:
