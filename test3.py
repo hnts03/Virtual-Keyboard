@@ -6,6 +6,7 @@
 # 3. 시간에 따른 키 입력방법 구현 (완료)
 # 4. 키보드 입력의 모듈화 진행하기
 # 5. 키보드 바깥으로 포인터가 넘어가도 키입력되던 것 수정(완료)
+# 알파채널을 활용하여 한글 이미지를 빠르게 합성할 방법 찾기(제안) -> 한글 표시에도 크게 프레임드랍이 발생하지 않게끔 수정 완료함.(10/8)
 
 
 from pynput.keyboard import Key, Controller
@@ -15,8 +16,11 @@ import cv2
 import numpy as np
 import time
 
+
+size_x, size_y = 1280, 720
+
 cap = cv2.VideoCapture(0)
-kb_layout = KM.Keyboard()
+kb_layout = KM.Keyboard(window_size=(size_y, size_x, 3))
 controller = Controller()
 detector = HTM.handDetector()
 
@@ -31,9 +35,9 @@ Wait_time = 2000000000 # 2s in ns
 key_dict = {
     "backspace"     : Key.backspace,
     "tab"           : Key.tab,
-    "caps_lock"     : Key.caps_lock,
+    #"caps_lock"     : Key.caps_lock,
     "enter"         : Key.enter,
-    "shift"         : Key.shift,
+    #"shift"         : Key.shift,
     "ctrl"          : Key.ctrl,
     "space"         : Key.space,
     "alt"           : Key.alt,
@@ -46,10 +50,10 @@ key_dict = {
 pTime = 0                       # previous time
 cTime = 0                       # current time
 
-size_x, size_y = 1280, 720
+
 
 isFlipped = True
-all_key_points = kb_layout.get_all_keyposition()
+all_key_points = kb_layout.get_diag_keyposition()
 is_in_boundary = False
 
 # print(points)
@@ -83,35 +87,39 @@ if cap.isOpened():
                             print(f"special key : {key}")
                             # controller.press(key_dict[key])
                             # controller.release(key_dict[key])
-
+                        
                 else:
-                    # print(f'c_key = {c_key}, key = {key}, is_in_boundary = {is_in_boundary}, points = {points}, lmList = {lmList[8][1:]}')
                     is_in_boundary = False
 
             # --- To measure how long the c_key keeps ---
-            if c_key != p_key:
+            if c_key != p_key: #손가락이 계속 움직이는 경우 초기화 하며 basetime 초기화
                 p_key = c_key
                 base_time = 0
                 delta_time = 0
-
-            elif is_in_boundary:
+                
+            elif is_in_boundary: #손가락이 계속 한키에 머물러 있을경우
                 temp = time.time_ns()
                 if delta_time == 0:
                     delta_time = temp
                 else :
                     base_time += temp - delta_time
 
-                # print(base_time)
-
+                
                 if base_time > Wait_time:
                     try:
+                        print(f"try block : c_key = {c_key}")
                         controller.press(c_key)
                         controller.release(c_key)
-                    
-                    except ValueError:
-                        controller.press(key_dict[c_key])
-                        controller.release(key_dict[c_key])
 
+                    except ValueError:
+                        if c_key in ('Lng', 'shift_l', 'shift_r', 'caps_lock', 'OPT_l', 'OPT_r'):
+                            print("changed key!")
+                            kb_layout.change_key(c_key)
+                            all_key_points = kb_layout.get_diag_keyposition()
+                        else :
+                            print(f"except block : c_key = {c_key}")
+                            controller.press(key_dict[c_key])
+                            controller.release(key_dict[c_key])
                     except :
                         pass
                     
