@@ -1,13 +1,7 @@
 import numpy as np
 import cv2
 from PIL import ImageFont, ImageDraw, Image
-
-
-# TODO :
-# 한글 키 인코딩 완료 (속도가 많이 느려짐,,), caps, shift는 완료 , opt는 공백에 손이 있어서 자꾸 바뀜(공백을 어떻게 처리할지?)
-# 텍스트 사이즈도 조절하는 변수 설정해야함
-# draw_all_keys 함수에서 opt(특수문자)도 적용시켜야 함.(10/8)
-        
+       
 
 class Keyboard():
     # window_size는 3 element tuple로 구성
@@ -47,7 +41,7 @@ class Keyboard():
                     'caps_lock','ㅁ','ㄴ','ㅇ','ㄹ','ㅎ','ㅗ','ㅓ','ㅏ','ㅣ',';','\'','enter', '\n',
                     'shift_l','ㅋ','ㅌ','ㅊ','ㅍ','ㅠ','ㅜ','ㅡ',',','.','/','shift_r', '\n',
                     'FN','ctrl','OPT_l','alt','space','Lng','OPT_r','left', 'up','down','right']
-        self.key_list_opt = ['OPT','~','!','@','#','$','%','^','&','*','(',')','_','+','{','}','|',':','"','<','>','?']
+        self.key_list_opt = ['OPT_l','~','!','@','#','$','%','^','&','*','?','\n','(',')','_','+','{','}','|',':','"','<','>']
         self.key_list = [self.key_list_small, self.key_list_big, self.key_list_kor, self.key_list_shift, self.key_list_opt]
         self.all_key_position = self.init_get_keyposition()
 
@@ -74,14 +68,15 @@ class Keyboard():
     # 클래스 인스턴스를 생성하자마자 바로 실행하여 현재 화면에서의 전체 키보드 레이아웃의 보더라인 꼭짓점 좌표를
     # 인덱스에 대한 딕셔너리 형식으로 리턴한다.
     # 각 자판의 보더라인 꼭짓점의 리스트 순서는 [좌상, 좌하, 우하, 우상] 순서로 진행된다.
-    def init_get_keyposition(self)->dict:
+    #키값들 scale값 조정하는 함수
+    def init_get_keyposition(self)->dict:   
         temp = {}
-        if self.key_list_index < 4:
-            for idx, key in enumerate(self.key_list[self.key_list_index]):
+        if self.key_list_index < 4:   #opt 키리스트 제외 나머지 키 리스트 위치
+            for idx, key in enumerate(self.key_list[self.key_list_index]):  #idx - key위치
                 scaler = 1.0
                 if idx in (14, 29, 43, 56):           # key == '\n' case
-                    self.y += self.s + 2
-                    self.init_coordinate(['x'])
+                    self.y += self.s + 2 
+                    self.init_coordinate(['x'])  #\n 일때 y값은 +2, x 값은 init_coordinate 함수로 초기화
                 else :
                     if idx in (13, 15, 30, 42, 44, 55, 61): # special keys
                         if idx == 13 or idx == 15:     # backspace, tab -> 1.5
@@ -102,8 +97,20 @@ class Keyboard():
                     self.x += int(scaler * self.s) + 2
             self.init_coordinate(['x', 's', 'y'])
         
-        else :
-            pass
+        #OPT키 그리기
+        else : 
+            for idx, key in enumerate(self.key_list[4]):
+                scaler = 1.0
+                if idx == 11:           # key == '\n' case
+                    self.y += self.s + 2 
+                    self.init_coordinate(['x'])
+                else: 
+                    temp[idx] = [key, [[self.x, self.y],                                  # up-left
+                        [self.x, self.y + self.s],                           # down-left
+                        [self.x + int(scaler * self.s), self.y + self.s],    # down-right
+                        [self.x + int(scaler * self.s), self.y]]]             # up-right
+                    self.x += int(scaler * self.s) + 2
+            self.init_coordinate(['x', 's', 'y'])
         return temp
     
     # self.all_key_position에서 key와 대각선 point 성분을 dict형으로 만들어서 리턴
@@ -111,14 +118,14 @@ class Keyboard():
         self.all_key_position = self.init_get_keyposition()
         temp = {}
         for element in self.all_key_position.values():
-            temp[element[0]] = [element[1][0], element[1][2]]
+            temp[element[0]] = [element[1][0], element[1][2]]  #temp[키이름] = [위 왼쪽 좌표, 아래 오른쪽 좌표]
 
         return temp
 
-    # 키보드의 레이아웃(보더라인)만 그리는 함수
-    def draw_keyboard_layout(self, key_position, boundary_color=(255,0,0)):
-        # print(key_position)
-        self.img = cv2.polylines(self.img, [key_position], True, boundary_color, 1)
+    # 키보드의 레이아웃(보더라인)만 그리는 함수   -- ? 보더라인이 어디를 뜻하는지
+    # def draw_keyboard_layout(self, key_position, boundary_color=(255,0,0)):
+    #     # print(key_position)
+    #     self.img = cv2.polylines(self.img, [key_position], True, boundary_color, 1)
 
 
     # 시도 1. 알파값을 이용한 그림 합성으로 한글 텍스트 그리기
@@ -126,22 +133,22 @@ class Keyboard():
 
 
     # 키보드의 텍스트만 그리는 함수
-    def draw_keyboard_text(self, key:str, key_position, text_color=(255,0,0)):
+    # def draw_keyboard_text(self, key:str, key_position, text_color=(255,0,0)):
         
-        if key == 'space' :
-            self.text_position_scaler = (0.5, 1.9) # space
-        elif len(key) == 1:
-            self.text_position_scaler = (0.5, 0.5) # len(key) == 1
-        else :
-            self.text_position_scaler = (0.5, 0.1) # base -> (y_scaler, x_scaler)
+    #     if key == 'space' :
+    #         self.text_position_scaler = (0.5, 1.9) # space
+    #     elif len(key) == 1:
+    #         self.text_position_scaler = (0.5, 0.5) # len(key) == 1
+    #     else :
+    #         self.text_position_scaler = (0.5, 0.1) # base -> (y_scaler, x_scaler)
 
-        text_position = [int(key_position[0] + (self.text_position_scaler[1] * self.s)), int(key_position[1] + (self.text_position_scaler[0] * self.s))]
+    #     text_position = [int(key_position[0] + (self.text_position_scaler[1] * self.s)), int(key_position[1] + (self.text_position_scaler[0] * self.s))]
 
-        if self.key_list_index in [0, 1]: # language : English
-            cv2.putText(self.img, str(key), text_position, cv2.FONT_HERSHEY_PLAIN, 1, text_color, 1, cv2.LINE_AA)
+    #     if self.key_list_index in [0, 1]: # language : English
+    #         cv2.putText(self.img, str(key), text_position, cv2.FONT_HERSHEY_PLAIN, 1, text_color, 1, cv2.LINE_AA)
 
-        elif self.key_list_index in [2, 3]: # language : Korean
-            pass
+    #     elif self.key_list_index in [2, 3]: # language : Korean
+    #         pass
     
     # 한번에 모든 레이아웃(바운더리)를 그리는 함수
     def draw_all_layout(self, all_key_positions, boundary_color=(255,0,0)):
@@ -150,7 +157,7 @@ class Keyboard():
 
     # 한번에 모든 키(한, 영 무관)를 그리는 함수
     def draw_all_keys(self, all_key_positions, text_color=(255,0,0)):
-        if self.key_list_index in (0, 1):
+        if self.key_list_index in (0, 1, 4):
             for key, key_position in all_key_positions:
                 if key == 'space' :
                     self.text_position_scaler = (0.5, 1.9) # space

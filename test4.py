@@ -1,140 +1,79 @@
-# test file for interlocking threading and tkinter module
+# This file is test file for operating test3.py on tkinter
 
 # TODO
-# run test3.py on tkinter window (미해결)
+# 1. tkinter과 threading 모듈을 활용하여 tkinter 화면에 넣기(완료)
+# 2. tkinter window에 entry 삽입
 
 
-from pynput.keyboard import Key, Controller
-import HandTrackingModule as HTM
-import KeyboardModule as KM
+import WebcamKeyboardModule as WKM
 import cv2
-import numpy as np
+import tkinter as tk
+import threading
+from PIL import Image, ImageTk
 import time
+import numpy as np
+
+class tk_window():
+    def __init__(self, window:tk.Tk):
+        self.window = window
+        self.window.title("test1")
+        self.window.geometry("1300x800+300+300")
+        self.window.resizable(False, False)
+
+        self.imgtk = None
+
+        button1 = tk.Button(self.window, text="close", overrelief="solid", width=15, command=self.window_close, repeatdelay=1000, repeatinterval=100)
+        button1.pack()
+
+        self.label = tk.Label(self.window, image=self.imgtk)
+        self.label.pack()
+
+        self.entry = tk.Entry(self.window)
+        self.entry.pack()
+
+    def window_close(self):
+        print("close")
+        self.window.quit()
+
+    # def toggle_image(self):
+
+    def convert_tkimage(self, cv_image):
+        RGB = cv2.cvtColor(cv_image, cv2.COLOR_BGR2RGB)
+        img = Image.fromarray(RGB)
+        self.imgtk = ImageTk.PhotoImage(image=img)
+
+        self.label.config(image=self.imgtk)
+        self.label.image = self.imgtk
 
 
-size_x, size_y = 1280, 720
-
-cap = cv2.VideoCapture(0)
-kb_layout = KM.Keyboard(window_size=(size_y, size_x, 3))
-controller = Controller()
-detector = HTM.handDetector()
-
-c_key = str()
-p_key = str()
-base_time = int()
-delta_time = int()
-
-Wait_time = 2000000000 # 2s in ns
-
-
-key_dict = {
-    "backspace"     : Key.backspace,
-    "tab"           : Key.tab,
-    #"caps_lock"     : Key.caps_lock,
-    "enter"         : Key.enter,
-    #"shift"         : Key.shift,
-    "ctrl"          : Key.ctrl,
-    "space"         : Key.space,
-    "alt"           : Key.alt,
-    "left"          : Key.left,
-    "right"         : Key.right,
-    "up"            : Key.up,
-    "down"          : Key.down
-}
-
-pTime = 0                       # previous time
-cTime = 0                       # current time
+class Cam_Thread(WKM.Webcam_keyboard):
+    def __init__(self, tk_win:tk_window, window_size, Usingimshow):
+        super().__init__(window_size)
+        self.tkimg = []
+        self.tk_window = tk_win
+        self.Usingimshow = Usingimshow
+    
+    def run_thread(self):
+        while True:
+            self.run_keyboard(self.Usingimshow)
+            # time.sleep(0.0000001)
+            self.tk_window.convert_tkimage(self.img)
 
 
+def main():
+    root = tk.Tk()
+    tk_win = tk_window(root)
 
-isFlipped = True
-all_key_points = kb_layout.get_diag_keyposition()
-is_in_boundary = False
+    size_x, size_y, channel = 1280, 720, 3
+    window_size = (size_y, size_x, channel)
+    Usingimshow = True
+    cam_thread = Cam_Thread(tk_win, window_size=window_size, Usingimshow=Usingimshow)
 
-# print(points)
-if cap.isOpened():
-    while True:
-        success, img = cap.read()
-        img = cv2.resize(img, (size_x, size_y))
+    thread_img = threading.Thread(target=cam_thread.run_thread, args=())
+    thread_img.daemon = True
+    thread_img.start()
 
-        if isFlipped:
-            img = cv2.flip(img, 1)
+    root.mainloop()
 
-        detector.findHands(img)
-        lmList = detector.findPosition(img, realscale=True, windowsize=[size_x, size_y])
-
-        kb_layout.get_image(img)
-
-        
-        if len(lmList) != 0:
-            # --- boundary condition ---
-            for key, points in all_key_points.items():
-                if (points[0][0] < lmList[8][1]) and (lmList[8][1] < points[1][0]) :
-                    if (points[0][1] < lmList[8][2]) and (lmList[8][2] < points[1][1]) :
-                        try :
-                            c_key = key
-                            is_in_boundary = True
-                            break
-                            # controller.press(key)
-                            # controller.release(key)
-                            
-                        except ValueError :
-                            print(f"special key : {key}")
-                            # controller.press(key_dict[key])
-                            # controller.release(key_dict[key])
-                        
-                else:
-                    is_in_boundary = False
-
-            # --- To measure how long the c_key keeps ---
-            if c_key != p_key: #손가락이 계속 움직이는 경우 초기화 하며 basetime 초기화
-                p_key = c_key
-                base_time = 0
-                delta_time = 0
-                
-            elif is_in_boundary: #손가락이 계속 한키에 머물러 있을경우
-                temp = time.time_ns()
-                if delta_time == 0:
-                    delta_time = temp
-                else :
-                    base_time += temp - delta_time
-
-                
-                if base_time > Wait_time:
-                    try:
-                        print(f"try block : c_key = {c_key}")
-                        controller.press(c_key)
-                        controller.release(c_key)
-
-                    except ValueError:
-                        if c_key in ('Lng', 'shift_l', 'shift_r', 'caps_lock', 'OPT_l', 'OPT_r'):
-                            print("changed key!")
-                            kb_layout.change_key(c_key)
-                            all_key_points = kb_layout.get_diag_keyposition()
-                        else :
-                            print(f"except block : c_key = {c_key}")
-                            controller.press(key_dict[c_key])
-                            controller.release(key_dict[c_key])
-                    except :
-                        pass
-                    
-                    base_time = 0
-                    delta_time = 0
-
-        
-        # --- Draw keyboard ---
-        img = kb_layout.drawing_keyboard()
-
-        # --- Draw FPS rate ---
-        cTime = time.time()
-        fps = 1/(cTime-pTime)
-        pTime = cTime
-        cv2.putText(img, str(int(fps)) + "FPS", (10, 70), cv2.FONT_HERSHEY_PLAIN, 3, (255, 0, 255), 3 )
-
-        # --- Run OpenCV window ---
-        cv2.imshow("test3", img)
-        if cv2.waitKey(1) != -1:
-            break
-
-cv2.destroyAllWindows()
-
+if __name__ == "__main__":
+    main()
