@@ -13,7 +13,6 @@ class tk_window():
     def __init__(self, window:tk.Tk, win_size_x='1300', win_size_y='800', win_pos_x='300', win_pos_y='300'):
         self.window = window
         self.window.title("test1")
-        # self.window.geometry("1300x800+300+300")
         self.window.geometry(win_size_x + 'x' + win_size_y + '+' + win_pos_x + '+' + win_pos_y)
         self.window.resizable(False, False)
 
@@ -70,6 +69,9 @@ def main():
     window_size = (size_y, size_x, channel)
     Usingimshow = True
     cam_thread = Cam_Thread(tk_win, window_size=window_size, Usingimshow=Usingimshow)
+
+    # KNN instance has been created
+    cam_thread.detector.KNN()
 
     thread_img = threading.Thread(target=cam_thread.run_thread, args=())
     thread_img.daemon = True

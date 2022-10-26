@@ -35,7 +35,7 @@ class Webcam_keyboard(KM.Keyboard):
         self.base_time = [int(), int()]
         self.delta_time = [int(), int()]
 
-        self.Wait_time = 2000000000 # 2s in nano-seconds
+        self.Wait_time = 500000000 # 0.5s in ns
 
         self.key_dict = {
             "backspace"     : Key.backspace,
@@ -61,16 +61,18 @@ class Webcam_keyboard(KM.Keyboard):
         self.lmList = []
         self.diag_points = self.get_diag_keyposition()
 
+        self.Keyboard_on = True
+        self.knn_base_time = 0
+        self.knn_delta_time = 0
+        self.knn_Wait_time = 500000000 # 0.5s in ns
+
     def run_keyboard(self, Usingimshow):
         self.Usingimshow = Usingimshow
+        knn_result = [None, None]
         if self.cap.isOpened():
             ret, self.img = self.cap.read()
             self.img = cv2.resize(self.img, (self.window_size[1], self.window_size[0]))
             self.img_Flip()
-
-            ###########################################
-            ## Code Position for gesture recognition ##
-            ###########################################
 
             self.detector.findHands(self.img)
             self.lmList = self.detector.findPosition(
@@ -78,10 +80,30 @@ class Webcam_keyboard(KM.Keyboard):
                 windowsize=[self.window_size[1], self.window_size[0]]
             )
             
+            ###########################################
+            ## Code Position for gesture recognition ##
+            ###########################################
+            
+            if self.detector.knn_isCreated :
+                if len(self.lmList) == 1:
+                    knn_result[0] = self.detector.KNN_result()
+                elif len(self.lmList) == 2:
+                    for hand_index in range(2):
+                        knn_result[hand_index] = self.detector.KNN_result(hand_index=hand_index)
+
+            if (0 in knn_result) and self.check_gestureTime():
+                if not self.Keyboard_on:
+                    print("1")
+                    self.Keyboard_on = True
+                else:
+                    print("2")
+                    self.Keyboard_on = False
+
+
             # 클래스 내부에서 작동하기 때문에 이미지 업데이트과정이 불필요
             # self.get_image(self.img) 
 
-            if ret:
+            if ret and self.Keyboard_on:
             # 손이 두개인 경우와 한개인 경우 분기
                 # 손이 1개인 경우
                 if len(self.lmList) == 1:
@@ -105,9 +127,23 @@ class Webcam_keyboard(KM.Keyboard):
                 # --- Draw Keyboard ---
                 self.drawing_keyboard()
 
-                # --- Draw FPS rate ---
-                self.draw_fps_rate()
+            # --- Draw FPS rate ---
+            self.draw_fps_rate()
 
+    def check_gestureTime(self):
+        temp = time.time_ns()
+        if self.knn_delta_time == 0:
+            self.knn_delta_time = temp
+        else :
+            self.knn_base_time = temp - self.knn_delta_time
+            self.knn_delta_time = temp
+
+        if self.knn_base_time > self.knn_Wait_time:
+            self.knn_delta_time = 0
+            self.knn_base_time = 0
+            return True
+        else :
+            return False
 
 
     def run_CV_window(self):
@@ -139,6 +175,7 @@ class Webcam_keyboard(KM.Keyboard):
 
             else :
                 self.base_time[iter] += temp - self.delta_time[iter]
+                self.delta_time[iter] = temp
             
             if self.base_time[iter] > self.Wait_time:
                 print(f'iter = {iter}, base_time = {self.base_time[iter]}')

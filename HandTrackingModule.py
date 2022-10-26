@@ -34,6 +34,8 @@ class handDetector():
         self.hands = self.mpHands.Hands(self.mode, self.maxHands, self.complexity,  # make Hands() class instance, use default
                                         self.detectionCon, self.trackingCon)        # for optimization, using non-static parameter                                                                                         
         self.mpDraw = mp.solutions.drawing_utils
+
+        self.knn_isCreated = False
         
 
     def KNN(self, mode_on=True, data_path='./DataSet.txt'):
@@ -42,6 +44,7 @@ class handDetector():
         label = file[:, -1].astype(np.float32)
         self.knn = cv2.ml.KNearest_create()
         self.knn.train(angle, cv2.ml.ROW_SAMPLE, label)
+        self.knn_isCreated = True
 
 
     def findHands(self, img, draw_hand_index=False):
