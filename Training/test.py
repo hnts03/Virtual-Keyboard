@@ -16,5 +16,7 @@ print(v)
 print('---'*4)
 print(v/np.linalg.norm(v,axis=1)[:,np.newaxis])
 
-# nd = np.zeros((21,3))
-# print(nd)
+
+l = [1]
+for i in len(l):
+    print(i)

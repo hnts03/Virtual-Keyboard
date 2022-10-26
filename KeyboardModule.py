@@ -122,33 +122,9 @@ class Keyboard():
 
         return temp
 
-    # 키보드의 레이아웃(보더라인)만 그리는 함수   -- ? 보더라인이 어디를 뜻하는지
-    # def draw_keyboard_layout(self, key_position, boundary_color=(255,0,0)):
-    #     # print(key_position)
-    #     self.img = cv2.polylines(self.img, [key_position], True, boundary_color, 1)
-
-
     # 시도 1. 알파값을 이용한 그림 합성으로 한글 텍스트 그리기
     # 시도 2. 그냥 self.img 이미지에다가 글자 하나씩이 아니라 한번에 다 그려버리기 
 
-
-    # 키보드의 텍스트만 그리는 함수
-    # def draw_keyboard_text(self, key:str, key_position, text_color=(255,0,0)):
-        
-    #     if key == 'space' :
-    #         self.text_position_scaler = (0.5, 1.9) # space
-    #     elif len(key) == 1:
-    #         self.text_position_scaler = (0.5, 0.5) # len(key) == 1
-    #     else :
-    #         self.text_position_scaler = (0.5, 0.1) # base -> (y_scaler, x_scaler)
-
-    #     text_position = [int(key_position[0] + (self.text_position_scaler[1] * self.s)), int(key_position[1] + (self.text_position_scaler[0] * self.s))]
-
-    #     if self.key_list_index in [0, 1]: # language : English
-    #         cv2.putText(self.img, str(key), text_position, cv2.FONT_HERSHEY_PLAIN, 1, text_color, 1, cv2.LINE_AA)
-
-    #     elif self.key_list_index in [2, 3]: # language : Korean
-    #         pass
     
     # 한번에 모든 레이아웃(바운더리)를 그리는 함수
     def draw_all_layout(self, all_key_positions, boundary_color=(255,0,0)):
@@ -195,21 +171,6 @@ class Keyboard():
         self.draw_all_keys(self.all_key_position.values())
         return self.img
 
-    # # 키보드를 그리는 함수(레이아웃 1개 텍스트 1개 순차적인 방식)
-    # def drawing_keyboard(self):
-    #     # 왜 인지는 모르지만 global로 key_position을 처리해주어야 try-except 구문 내부에서 key_position이 정상 인식된다.
-    #     # self.temp_key_position = []
-    #     for idx, key in enumerate(self.key_list[self.key_list_index]):
-    #         # self.all_key_position에는 '\n'의 인덱스에 대한 Value가 없기 때문에 try-except 구문으로 ValueError 해결
-    #         try:
-    #             # self.temp_key_position = self.all_key_position[idx]
-    #             self.draw_keyboard_layout(np.array(self.all_key_position[idx][1]))
-    #             self.draw_keyboard_text(key, self.all_key_position[idx][1][0])
-            
-    #         except :
-    #             pass
-    #     return self.img
-
 
     def change_key(self, key_name):
         if key_name == 'Lng':
@@ -235,7 +196,7 @@ class Keyboard():
         
         
 
-def main():
+def __main():
     kb = Keyboard()             # 키보드 클래스 가져오기
     kb.drawing_keyboard()       # 키보드 클래스의 drawing_keyboard 함수 사용
     # print(kb.all_key_position)
@@ -246,5 +207,5 @@ def main():
     cv2.destroyAllWindows()
 
 if __name__ == "__main__":
-    main()
+    __main()
 

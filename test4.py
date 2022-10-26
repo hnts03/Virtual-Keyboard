@@ -1,9 +1,5 @@
 # This file is test file for operating test3.py on tkinter
 
-# TODO
-# 1. tkinter과 threading 모듈을 활용하여 tkinter 화면에 넣기(완료)
-# 2. tkinter window에 entry 삽입
-
 
 import WebcamKeyboardModule as WKM
 import cv2
@@ -14,10 +10,11 @@ import time
 import numpy as np
 
 class tk_window():
-    def __init__(self, window:tk.Tk):
+    def __init__(self, window:tk.Tk, win_size_x='1300', win_size_y='800', win_pos_x='300', win_pos_y='300'):
         self.window = window
         self.window.title("test1")
-        self.window.geometry("1300x800+300+300")
+        # self.window.geometry("1300x800+300+300")
+        self.window.geometry(win_size_x + 'x' + win_size_y + '+' + win_pos_x + '+' + win_pos_y)
         self.window.resizable(False, False)
 
         self.imgtk = None
@@ -30,6 +27,7 @@ class tk_window():
 
         self.entry = tk.Entry(self.window)
         self.entry.pack()
+        self.entry.focus()
 
     def window_close(self):
         print("close")
@@ -61,8 +59,12 @@ class Cam_Thread(WKM.Webcam_keyboard):
 
 
 def main():
+
+    win_size_x, win_size_y = '1300', '800'
+    win_pos_x, win_pos_y = '300', '300'
+
     root = tk.Tk()
-    tk_win = tk_window(root)
+    tk_win = tk_window(root, win_size_x, win_size_y, win_pos_x, win_pos_y)
 
     size_x, size_y, channel = 1280, 720, 3
     window_size = (size_y, size_x, channel)
