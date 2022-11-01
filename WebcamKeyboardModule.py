@@ -5,20 +5,8 @@ import cv2
 import numpy as np
 import time
 
-# Changes (10.25)
-# 1. Single handed -> Multi Handed
-# 2. New function added
-#       * Webcam_keyboard.check_ckey_Keeps_base()
-#           -> module function for Webcam_keyboard.check_ckey_Keeps()
-#       * Webcam_keyboard.check_boundary_base()
-#           -> module function for Webcam_keyboard.check_boundary()
-# 3. Existing function changes
-#       * Webcam_keyboard.run_keyboard()
-#           -> Working condition added <- number of hands
-#       * Webcam_keyboard.check_ckey_Keeps()
-#           -> simplified with module function
-#       * Webcam_keyboard.check_boundary()
-#           -> simplified with module function
+# Changes (11.01)
+# 1. 187 line -> special key error corrected
 
 
 
@@ -184,7 +172,7 @@ class Webcam_keyboard(KM.Keyboard):
                     self.controller.press(self.c_key[iter])
                     self.controller.release(self.c_key[iter])
                 except ValueError:
-                    if self.c_key in ('Lng', 'shift_l', 'shift_r', 'caps_lock', 'OPT_l', 'OPT_r'):
+                    if self.c_key[iter] in ('Lng', 'shift_l', 'shift_r', 'caps_lock', 'OPT_l', 'OPT_r'):
                         print("Key Changed!")
                         self.change_key(self.c_key[iter])
                         self.diag_points = self.get_diag_keyposition()
