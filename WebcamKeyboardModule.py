@@ -9,7 +9,9 @@ import time
 # 1. 187 line -> special key error corrected
 
 
-
+# 웹캠의 사용을 전제하는 키보드 클래스
+# 기존 KeyboardModule의 Keyboard클래스의 자식 클래스이다.
+# HandTrackingModule의 handDetector클래스도 동시에 활용한다.
 class Webcam_keyboard(KM.Keyboard):
     def __init__(self, window_size) :
         super().__init__(window_size)
@@ -25,6 +27,7 @@ class Webcam_keyboard(KM.Keyboard):
 
         self.Wait_time = 500000000 # 0.5s in ns
 
+        # 특수키를 pynput에 활용하기 위한 딕셔너리
         self.key_dict = {
             "backspace"     : Key.backspace,
             "tab"           : Key.tab,
@@ -54,6 +57,10 @@ class Webcam_keyboard(KM.Keyboard):
         self.knn_delta_time = 0
         self.knn_Wait_time = 500000000 # 0.5s in ns
 
+    # 키보드를 그리는 함수
+    # knn이 동작중이라면, knn의 결과물이 0인 경우 이면서 check_gesturetime이 True인 경우에 키보드를 껏다가 킬 수 있게 구현
+    # knn을 사용하지 않는다면, 손의 개수에 따라 키보드 바운더리, 키보드 입력등의 경우에 대응하도록 구현
+    # 이후 키보드를 그리고 FPS를 좌측상단에 그린다.
     def run_keyboard(self, Usingimshow):
         self.Usingimshow = Usingimshow
         knn_result = [None, None]
@@ -118,6 +125,7 @@ class Webcam_keyboard(KM.Keyboard):
             # --- Draw FPS rate ---
             self.draw_fps_rate()
 
+    # 특정 제스처가 수행된 뒤에 그것을 재인식하기까지 필요한 딜레이를 구현한 함수
     def check_gestureTime(self):
         temp = time.time_ns()
         if self.knn_delta_time == 0:
@@ -133,7 +141,7 @@ class Webcam_keyboard(KM.Keyboard):
         else :
             return False
 
-
+    # OpenCV의 imshow메서드로 opencv윈도우를 켜게하는 메서드
     def run_CV_window(self):
         if self.Usingimshow:
             cv2.imshow("test", self.img)
@@ -142,6 +150,7 @@ class Webcam_keyboard(KM.Keyboard):
             else :
                 return False
 
+    # 현재 FPS를 그리는 메서드
     def draw_fps_rate(self):
         self.cTime = time.time()
         fps = 1/(self.cTime-self.pTime)
@@ -150,6 +159,7 @@ class Webcam_keyboard(KM.Keyboard):
             self.img, str(int(fps)) + "FPS", (10, 70), 
             cv2.FONT_HERSHEY_PLAIN, 3, (255, 0, 255), 3 )
 
+    # 현재 입력된 키가 얼마나 지속되는지 계산하고 지속 시간에 맞춰 키입력을 수행하는 메서드
     def check_ckey_Keeps_base(self, iter):
         if self.c_key[iter] != self.p_key[iter]:
                 self.p_key[iter] = self.c_key[iter]
@@ -186,6 +196,7 @@ class Webcam_keyboard(KM.Keyboard):
                 self.base_time[iter]  = 0
                 self.delta_time[iter] = 0
 
+    # 손의 개수에 따라서 개형이 약간 달라지는 점을 보완하기 위해 구현된 check_ckey_Keeps_base의 상위 모듈 함수
     def check_ckey_Keeps(self, hand_num=1):
         if hand_num == 1:
             self.check_ckey_Keeps_base(iter=hand_num-1)
@@ -196,7 +207,8 @@ class Webcam_keyboard(KM.Keyboard):
         else :
             pass
 
-
+    
+    # 키보드 바운더리에 특정 landmark좌표(여기서는 8번::검지손가락 가장 끝 랜드마크)가 키보드 바운더리에 들어와 있는지 확인하는 메서드
     def check_boundary_base(self, iter=1):
         for key, points in self.diag_points.items():
                 if (points[0][0] < self.lmList[iter][8][1]) and (self.lmList[iter][8][1] < points[1][0]) :
@@ -209,6 +221,7 @@ class Webcam_keyboard(KM.Keyboard):
                 else:
                     self.is_inBoundary[iter] = False
 
+    # 손의 수에 따라 변경되는점을 보완하기 위해 구현한 check_boundary_base의 상위 모듈 메서드
     def check_boundary(self, hand_num=1):
         if hand_num == 1:
             self.check_boundary_base(iter=hand_num-1)
@@ -221,7 +234,8 @@ class Webcam_keyboard(KM.Keyboard):
 
         else :
             pass
-
+    
+    # 이미지 반전 메서드
     def img_Flip(self):
         if self.isFlipped:
             self.img = cv2.flip(self.img, 1)

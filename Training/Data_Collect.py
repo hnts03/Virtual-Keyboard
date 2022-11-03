@@ -1,3 +1,5 @@
+# 데이터 수집을 위한 프로그램
+
 import mediapipe as mp
 import numpy as np
 import cv2
@@ -5,14 +7,10 @@ import cv2
 # from pynput import keyboard
 import time
 
+
 max_num_hands = 2
 
-# gesture = {
-#     0:'a', 1:'b', 2:'c', 3:'d', 4:'e', 5:'f', 6:'g', 7:'h', 8:'i', 9:'j', 10:'k',
-#     11:'l', 12:'m', 13:'n', 14:'o', 15:'p', 16:'q', 17:'r', 18:'s', 19:'t',
-#     20:'u', 21:'v', 22:'w', 23:'x', 24:'y', 25:'z', 26:'space', 27:'clear'
-# }
-
+# 수집할 제스처
 gesture = {
     0:'open', 1:'close', 2:'index_finger', 3:'Bunch'
 }
@@ -25,8 +23,10 @@ hands = mp_hands.Hands(
     min_tracking_confidence = 0.5
 )
 
+# 수집한 데이터가 저장될 위치
 f = open('./Training/test.txt', 'w')
 
+# 테스트 학습
 file = np.genfromtxt('./Training/DataSet.txt', delimiter=',')
 
 angleFile = file[:,:-1]
@@ -64,23 +64,7 @@ while True:
             v2 = joint[[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20], :]
 
             v = v2 - v1
-
-            ###
-            # print("v1")
-            # print(v1)
-            # print('---'*8)
-            # print("v2")
-            # print(v2)
-            # print('---'*8)
-            # print("v")
-            # print(v)
-            # print('---'*8)
-            # print("v/linalg[:,np.newaxis]")
-            # print(v/np.linalg.norm(v,axis=1)[:, np.newaxis])
-            # print('---'*8)
-            ###
-
-
+        
             v = v / np.linalg.norm(v, axis=1)[:, np.newaxis]
 
             compareV1 = v[[0, 1, 2, 4, 5, 6, 7,  8,  9, 10, 12, 13, 14, 16, 17], :]
@@ -106,26 +90,11 @@ while True:
             index = int(results[0][0])
 
             if index in gesture.keys():
-                # if index != prev_index:
-                #     startTime = time.time()
-                #     prev_index = index
-                
-                # else:
-                #     if time.time() - startTime > recognizeDelay:
-                #         if index == 26:
-                #             sentence += ' '
-                #         elif index == 27:
-                #             sentence = ''
-                #         else:
-                #             sentence += gesture[index]
-                #         startTime = time.time()
-
                 cv2.putText(img=img, text=gesture[index].upper(), 
                             org=(int(res.landmark[0].x * img.shape[1] - 10), int(res.landmark[0].y * img.shape[0] + 40)),
                             fontFace=cv2.FONT_HERSHEY_SIMPLEX, fontScale=1, color=(255,255,255), thickness=3)
             
             mp_drawing.draw_landmarks(img, res, mp_hands.HAND_CONNECTIONS)
-    # cv2.putText(img, sentence, (20, 440), cv2.FONT_HERSHEY_SIMPLEX, 2, (255, 255, 255), 3)
 
     cv2.imshow('HandTracking', img)
     if pressed_key != -1 and pressed_key != 97:

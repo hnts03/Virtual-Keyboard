@@ -1,8 +1,11 @@
 import numpy as np
 import cv2
-from PIL import ImageFont, ImageDraw, Image
+# PIL은 OpenCV상에서 한글을 이미지에 그릴 수 없기 때문에 활용한다.
+# PIL이미지는 tkinter에서도 활용되므로 프로세스를 개선하면 동작속도의 개선을 예상할 수 있다.
+from PIL import ImageFont, ImageDraw, Image 
        
 
+# 키보드를 그리기 위한 클래스
 class Keyboard():
     # window_size는 3 element tuple로 구성
     # window_size = (y(height), x(width), 3(channel))
@@ -20,6 +23,7 @@ class Keyboard():
         self.y = self.img.shape[0] - int(self.img.shape[0] * 0.118) - (self.s * 5)
         
         # 키보드 배열
+        # '\n'을 기준으로 다음 행으로 넘어간다.
         self.key_list_index = 0
         self.key_list_big = ['`','1','2','3','4','5','6','7','8','9','0','-','=','backspace','\n',
                     'tab', 'Q','W','E','R','T','Y','U','I','O','P','[',']','\\','\n',
@@ -54,6 +58,7 @@ class Keyboard():
         self.img = img
 
     # 좌표 초기화 함수
+    # s(변의 길이, 편향), x, y값이 변경되는 상황이 발생할 수 있기 때문에 고정된 정수형으로 반환하는 함수.
     def init_coordinate(self, elements:list):
         for element in elements:
             if element == 's':
@@ -68,7 +73,7 @@ class Keyboard():
     # 클래스 인스턴스를 생성하자마자 바로 실행하여 현재 화면에서의 전체 키보드 레이아웃의 보더라인 꼭짓점 좌표를
     # 인덱스에 대한 딕셔너리 형식으로 리턴한다.
     # 각 자판의 보더라인 꼭짓점의 리스트 순서는 [좌상, 좌하, 우하, 우상] 순서로 진행된다.
-    #키값들 scale값 조정하는 함수
+    # 키값들 scale값 조정하는 함수
     def init_get_keyposition(self)->dict:   
         temp = {}
         if self.key_list_index < 4:   #opt 키리스트 제외 나머지 키 리스트 위치
@@ -126,12 +131,13 @@ class Keyboard():
     # 시도 2. 그냥 self.img 이미지에다가 글자 하나씩이 아니라 한번에 다 그려버리기 
 
     
-    # 한번에 모든 레이아웃(바운더리)를 그리는 함수
+    # 한번에 모든 레이아웃(바운더리)를 그리는 함수 -> 바운더리를 하나 그리고 글자 하나 쓰는 것은 비효율적.
     def draw_all_layout(self, all_key_positions, boundary_color=(255,0,0)):
         for key_position in all_key_positions:
             self.img = cv2.polylines(self.img, np.array([key_position[1]]), True, boundary_color, 1)
 
     # 한번에 모든 키(한, 영 무관)를 그리는 함수
+    # key값이 특수키인 경우에 대해 글자 위치를 조절
     def draw_all_keys(self, all_key_positions, text_color=(255,0,0)):
         if self.key_list_index in (0, 1, 4):
             for key, key_position in all_key_positions:
@@ -171,7 +177,7 @@ class Keyboard():
         self.draw_all_keys(self.all_key_position.values())
         return self.img
 
-
+    # 키보드의 한/영 이나 shift, caps_lock, opt키 등 키배열이나 키 텍스트의 변형을 주는 함수
     def change_key(self, key_name):
         if key_name == 'Lng':
             if self.key_list_index == 0:
