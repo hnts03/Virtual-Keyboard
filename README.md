@@ -10,7 +10,7 @@ This repository is about 2022 CAU Electronic Engineering major Final project
 * Numpy                   1.21.5
 * opencv-python           4.6.0.66
 * opencv-contrib-python   4.6.0.66
-* piilow                  9.2.0
+* pillow                  9.2.0
 * pynput                  1.7.3
 * mediapipe               0.8.10.1
 
