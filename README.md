@@ -16,4 +16,4 @@ This repository is about 2022 CAU Electronic Engineering major Final project
 
 # Pages
 * Github : https://github.com/hnts03/Virtual-Keyboard
-* 
+* Notion : https://hnts03.notion.site/Virtual-Keyboard-Development-with-Hand-Eye-Tracking-f0d4619bd180400f927f37f72d981cff
